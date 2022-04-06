@@ -62,6 +62,7 @@ export default class AuthenticationController implements AuthenticationControlle
         if (existingUser) {
             const match = await bcrypt.compare(password, existingUser.password);
             if (match) {
+                existingUser.password = '*****';
                 // @ts-ignore
                 req.session['profile'] = existingUser;
                 res.json(existingUser);
