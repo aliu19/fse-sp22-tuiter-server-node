@@ -90,12 +90,12 @@ export default class AuthenticationController implements AuthenticationControlle
             .findUserByUsername(newUser.username);
 
         if (existingUser) {
-            existingUser.password = '*****';
             res.sendStatus(403);
             return;
         } else {
             const insertedUser = await AuthenticationController.userDao
                 .createUser(newUser);
+            insertedUser.password = '';
             // @ts-ignore
             req.session['profile'] = insertedUser;
             res.json(insertedUser);
