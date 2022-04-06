@@ -32,7 +32,6 @@ const UserSchema = new mongoose.Schema<User>({
     email: {type: String, required: true},
     profilePhoto: String,
     headerImage: String,
-    accountType: {type: String, default: AccountType.Personal, enum: AccountType},
     maritalStatus: {type: String, default: MaritalStatus.Single, enum: MaritalStatus},
     biography: String,
     dateOfBirth: Date,
