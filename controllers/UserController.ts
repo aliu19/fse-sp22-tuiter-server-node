@@ -111,17 +111,16 @@ export default class UserController implements UserControllerI {
      */
     updateUser = async (req: Request, res: Response) => {
         const userInfo = req.body
-        let existingUser = false
 
-        // checks if username is taken
-        if (userInfo.username) {
-            existingUser = await UserController.userDao.findUserByUsername(userInfo.username)
-        }
+        // to check if username is changed
+        const existingUser = await UserController.userDao.findUserById(req.params.uid)
+        // to check if username is taken
+        const checkUser = await UserController.userDao.findUserByUsername(userInfo.username)
 
-        // if no username taken or changed
-        if (!existingUser) {
+        // if username not changed, or not taken
+        if (existingUser.username === userInfo.username || !checkUser) {
             // encrypt password if changed
-            if (userInfo.password) {
+            if (existingUser.password != userInfo.password) {
                 const password = userInfo.password;
                 userInfo.password = await bcrypt.hash(password, saltRounds);
             }
