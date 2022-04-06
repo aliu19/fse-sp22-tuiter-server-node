@@ -6,6 +6,7 @@ import AccountType from "../../models/users/AccountType";
 import MaritalStatus from "../../models/users/MaritalStatus";
 import LocationSchema from "./LocationSchema";
 import User from "../../models/users/User";
+import Role from "../../models/users/Role";
 
 /**
  * @typedef UserSchema Represent users
@@ -36,7 +37,8 @@ const UserSchema = new mongoose.Schema<User>({
     biography: String,
     dateOfBirth: Date,
     joined: {type: Date, default: Date.now},
-    location: LocationSchema
+    location: LocationSchema,
+    role: {type: String, default: Role.General, enum: Role}
 }, {collection: 'users'});
 
 export default UserSchema;

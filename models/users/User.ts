@@ -4,6 +4,7 @@
 import AccountType from "./AccountType";
 import MaritalStatus from "./MaritalStatus";
 import Location from "./Location";
+import Role from "./Role";
 
 /**
  * @typedef User represent user
@@ -35,4 +36,5 @@ export default class User {
     private dateOfBirth: Date | null = null;
     private joined: Date = new Date();
     private location: Location | null = null;
+    private role:  Role = Role.General;
 }
