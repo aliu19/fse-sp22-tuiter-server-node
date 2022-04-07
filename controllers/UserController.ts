@@ -120,7 +120,7 @@ export default class UserController implements UserControllerI {
         // if username not changed, or not taken
         if (existingUser.username === userInfo.username || !checkUser) {
             // encrypt password if changed
-            if (existingUser.password != userInfo.password) {
+            if (userInfo.password) {
                 const password = userInfo.password;
                 userInfo.password = await bcrypt.hash(password, saltRounds);
             }
