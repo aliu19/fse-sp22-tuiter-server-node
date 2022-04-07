@@ -96,7 +96,7 @@ export default class AuthenticationController implements AuthenticationControlle
         } else {
             const insertedUser = await AuthenticationController.userDao
                 .createUser(newUser);
-            insertedUser.password = '';
+            insertedUser.password = '*****';
             // @ts-ignore
             req.session['profile'] = insertedUser;
             res.json(insertedUser);
@@ -111,11 +111,14 @@ export default class AuthenticationController implements AuthenticationControlle
      * current session, otherwise sends the status that session expires and
      * user is not logged in.
      */
-    profile = (req: Request, res: Response) => {
+    profile = async (req: Request, res: Response) => {
         // @ts-ignore
         const profile = req.session['profile'];
         if (profile) {
-            res.json(profile);
+            // make sure always get the latest user's profile data
+            const existingUser = await AuthenticationController.userDao.findUserById(profile._id);
+            existingUser.password = '*****';
+            res.json(existingUser);
         } else {
             res.sendStatus(403);
         }
