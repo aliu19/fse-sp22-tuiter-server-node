@@ -6,6 +6,8 @@ import UserDAO from "../daos/UserDao"
 import UserControllerI from "../interfaces/UserControllerI";
 import UserDao from "../daos/UserDao";
 import User from "../models/users/User";
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 /**
  * @class UserController Implements RESTful Web service API for users resource.
@@ -107,9 +109,35 @@ export default class UserController implements UserControllerI {
      * @param {Response} res Represents response to client, including status
      * on whether updating a user was successful or not
      */
-    updateUser = (req: Request, res: Response) =>
-        UserController.userDao.updateUser(req.params.uid, req.body)
-            .then(status => res.json(status))
+    updateUser = async (req: Request, res: Response) => {
+        const userInfo = req.body
+
+        // to check if username is changed
+        const existingUser = await UserController.userDao.findUserById(req.params.uid)
+        // to check if username is taken
+        const checkUser = await UserController.userDao.findUserByUsername(userInfo.username)
+
+        // if username not changed, or not taken
+        if (existingUser.username === userInfo.username || !checkUser) {
+            // encrypt password if changed
+            if (userInfo.password) {
+                const password = userInfo.password;
+                userInfo.password = await bcrypt.hash(password, saltRounds);
+            }
+
+            // update the user
+            await UserController.userDao.updateUser(req.params.uid, userInfo).then(status => res.json(status))
+
+            // update session
+            const updatedUser = await UserController.userDao.findUserById(req.params.uid)
+            updatedUser.password = '*****';
+            // @ts-ignore
+            req.session['profile'] = updatedUser;
+        } else {
+            // username is taken so error
+            res.sendStatus(403);
+        }
+    }
 
 
     /**
