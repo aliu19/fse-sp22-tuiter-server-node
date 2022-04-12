@@ -42,8 +42,9 @@ export default class UserController implements UserControllerI {
             UserController.userController = new UserController();
             app.get('/api/users', UserController.userController.findAllUsers);
             app.get('/api/users/:uid', UserController.userController.findUserById);
-            app.get('api/users/username/:username', UserController.userController.findUserByUsername)
+            app.get('/api/admin/:username', UserController.userController.findUserByUsername)
             app.post('/api/users', UserController.userController.createUser);
+            app.post('/api/admin', UserController.userController.adminCreateUser);
             app.post('/api/login', UserController.userController.login);
             app.post('/api/register', UserController.userController.register)
             app.put('/api/users/:uid', UserController.userController.updateUser);
@@ -99,6 +100,31 @@ export default class UserController implements UserControllerI {
     createUser = (req: Request, res: Response) => {
         UserController.userDao.createUser(req.body)
             .then((user: User) => res.json(user));
+    }
+
+    /**
+     * Creates a new user instance
+     * @param {Request} req Represents request from client, including body
+     * containing the JSON object for the new user to be inserted in the
+     * database
+     * @param {Response} res Represents response to client, including the
+     * body formatted as JSON containing the new user that was inserted in the
+     * database
+     */
+    adminCreateUser = async (req: Request, res: Response) => {
+        const newUser = req.body;
+        const password = newUser.password;
+        newUser.password = await bcrypt.hash(password, saltRounds);
+        const existingUser = await UserController.userDao
+        .findUserByUsername(newUser.username);
+
+        if (existingUser) {
+            res.sendStatus(403);
+            return
+        } else {
+            UserController.userDao.createUser(newUser)
+                .then((user: User) => res.json(user));
+        }
     }
 
     /**

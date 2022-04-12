@@ -13,4 +13,5 @@ export default interface UserControllerI {
     register(req: Request, res: Response): void;
     deleteUserByUsername(req: Request, res: Response): void;
     findUserByUsername(req: Request, res: Response): void;
+    adminCreateUser(req: Request, res: Response): void;
 }
