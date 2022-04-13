@@ -14,6 +14,7 @@ import TuitService from "../services/TuitService";
  *     <li>GET /api/tuits to retrieve all the tuit instances </li>
  *     <li>GET /api/tuits/:tid to retrieve a particular tuit instances </li>
  *     <li>GET /api/users/:uid/tuits to retrieve tuits for a given user </li>
+ *     <li>GET /api/admin/:tuit/tuits to retrieve all tuit(s) with the searched string </li>
  *     <li>POST /api/tuits to create a new tuit instance </li>
  *     <li>POST /api/users/:uid/tuits to create a new tuit instance for
  *     a given user</li>
@@ -42,6 +43,7 @@ export default class TuitController implements TuitControllerI {
             app.get('/api/tuits', TuitController.tuitController.findAllTuits);
             app.get('/api/tuits/:tid', TuitController.tuitController.findTuitById);
             app.get('/api/users/:uid/tuits', TuitController.tuitController.findTuitsByUser);
+            app.get('/api/admin/:tuit/tuits', TuitController.tuitController.searchByTuit)
             app.post('/api/tuits', TuitController.tuitController.createTuit);
             app.post("/api/users/:uid/tuits", TuitController.tuitController.createTuitByUser);
             app.put('/api/tuits/:tid', TuitController.tuitController.updateTuit);
@@ -133,6 +135,20 @@ export default class TuitController implements TuitControllerI {
                 })
         }
     }
+
+    /**
+     * Retrieves tuit(s) by their tuit
+     * @param {Request} req Represents request from client, including path
+     * parameter tuit identifying the tuit of the tuit(s) to be retrieved
+     * @param {Response} res Represents response to client, including the
+     * body formatted as JSON containing the tuit(s) that match the tuit
+     */
+    searchByTuit = (req: Request, res: Response) =>
+        TuitController.tuitDao.searchByTuit(req.params.tuit)
+            .then(tuits => {
+                const sortedTuits = tuits.sort((a: Tuit, b: Tuit) => a.tuit > b.tuit ? 1 : -1)
+                res.json(sortedTuits)
+            })
 
     /**
      * Creates a new tuit instance

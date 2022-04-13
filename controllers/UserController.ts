@@ -42,11 +42,13 @@ export default class UserController implements UserControllerI {
             UserController.userController = new UserController();
             app.get('/api/users', UserController.userController.findAllUsers);
             app.get('/api/users/:uid', UserController.userController.findUserById);
+            app.get('/api/admin/:username', UserController.userController.searchByUsername)
             app.post('/api/users', UserController.userController.createUser);
+            app.post('/api/admin', UserController.userController.adminCreateUser);
             app.post('/api/login', UserController.userController.login);
             app.post('/api/register', UserController.userController.register)
             app.put('/api/users/:uid', UserController.userController.updateUser);
-            app.delete('/api/users/:uid', UserController.userController.deleteUser);
+            app.delete('/api/admin/:uid', UserController.userController.adminDeleteUser);
             app.get('/api/users/username/:username/delete', UserController.userController.deleteUserByUsername);
         }
         return UserController.userController;
@@ -76,6 +78,20 @@ export default class UserController implements UserControllerI {
             .then((user: User) => res.json(user));
 
     /**
+     * Retrieves user(s) by their username
+     * @param {Request} req Represents request from client, including path
+     * parameter username identifying the username of the user(s) to be retrieved
+     * @param {Response} res Represents response to client, including the
+     * body formatted as JSON containing the user(s) that match the username
+     */
+    searchByUsername = (req: Request, res: Response) =>
+        UserController.userDao.searchByUsername(req.params.username)
+            .then(users => {
+                const sortedUsers = users.sort((a: User, b: User) => a.username > b.username ? 1 : -1)
+                res.json(sortedUsers)
+            })
+
+    /**
      * Creates a new user instance
      * @param {Request} req Represents request from client, including body
      * containing the JSON object for the new user to be inserted in the
@@ -90,13 +106,38 @@ export default class UserController implements UserControllerI {
     }
 
     /**
+     * Creates a new user instance
+     * @param {Request} req Represents request from client, including body
+     * containing the JSON object for the new user to be inserted in the
+     * database
+     * @param {Response} res Represents response to client, including the
+     * body formatted as JSON containing the new user that was inserted in the
+     * database
+     */
+    adminCreateUser = async (req: Request, res: Response) => {
+        const newUser = req.body;
+        const password = newUser.password;
+        newUser.password = await bcrypt.hash(password, saltRounds);
+        const existingUser = await UserController.userDao
+        .findUserByUsername(newUser.username);
+
+        if (existingUser) {
+            res.sendStatus(403);
+            return
+        } else {
+            UserController.userDao.createUser(newUser)
+                .then((user: User) => res.json(user));
+        }
+    }
+
+    /**
      * Removes a user instance from the database
      * @param {Request} req Represents request from client, including path
      * parameter uid identifying the primary key of the user to be removed
      * @param {Response} res Represents response to client, including status
      * on whether deleting a user was successful or not
      */
-    deleteUser = (req: Request, res: Response) =>
+    adminDeleteUser = (req: Request, res: Response) =>
         UserController.userDao.deleteUser(req.params.uid)
             .then(status => res.json(status))
 
@@ -131,8 +172,6 @@ export default class UserController implements UserControllerI {
             // update session
             const updatedUser = await UserController.userDao.findUserById(req.params.uid)
             updatedUser.password = '*****';
-            // @ts-ignore
-            req.session['profile'] = updatedUser;
         } else {
             // username is taken so error
             res.sendStatus(403);

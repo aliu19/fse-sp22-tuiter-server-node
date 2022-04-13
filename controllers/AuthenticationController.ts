@@ -4,6 +4,7 @@
 import {Express, Request, Response} from "express";
 import UserDao from "../daos/UserDao";
 import AuthenticationControllerI from "../interfaces/AuthenticationControllerI";
+
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
@@ -17,6 +18,7 @@ const saltRounds = 10;
  *     no repeating username </li>
  *     <li>POST /api/auth/profile to retrieve user's profile based on current session </li>
  *     <li>POST /api/auth/logout to destroy the current session for logging out </li>
+ *     <li>DELETE /api/auth/delete to remove the user based on current session </li>
  * </ul>
  * @property {UserDao} userDao Singleton DAO implementing user CRUD operations
  * @property {AuthenticationController} authenticationController Singleton controller implementing
@@ -38,11 +40,13 @@ export default class AuthenticationController implements AuthenticationControlle
             app.post('/api/auth/signup', AuthenticationController.authenticationController.signup);
             app.post('/api/auth/profile', AuthenticationController.authenticationController.profile);
             app.post('/api/auth/logout', AuthenticationController.authenticationController.logout);
+            app.delete('/api/auth/delete', AuthenticationController.authenticationController.delete)
         }
         return AuthenticationController.authenticationController;
     }
 
-    private constructor() {}
+    private constructor() {
+    }
 
     /**
      * Retrieves the user by their credential for logging in
@@ -117,8 +121,12 @@ export default class AuthenticationController implements AuthenticationControlle
         if (profile) {
             // make sure always get the latest user's profile data
             const existingUser = await AuthenticationController.userDao.findUserById(profile._id);
-            existingUser.password = '*****';
-            res.json(existingUser);
+            if (existingUser) {
+                existingUser.password = '*****';
+                res.json(existingUser);
+            } else {
+                res.sendStatus(403);
+            }
         } else {
             res.sendStatus(403);
         }
@@ -136,4 +144,26 @@ export default class AuthenticationController implements AuthenticationControlle
         res.sendStatus(200);
     }
 
+
+    /**
+     * Removes a user instance from the database based on current session
+     * @param {Request} req Represents request from client, including path
+     * parameter uid identifying the primary key of the user to be removed
+     * @param {Response} res Represents response to client, including status
+     * on whether deleting a user was successful or not
+     */
+    delete = (req: Request, res: Response) => {
+        // @ts-ignore
+        const profile = req.session['profile'];
+        if (profile) {
+            AuthenticationController.userDao.deleteUser(profile._id)
+                .then(status => {
+                    // @ts-ignore
+                    req.session.destroy();
+                    res.json(status)
+                })
+        } else {
+            res.sendStatus(403);
+        }
+    }
 }
