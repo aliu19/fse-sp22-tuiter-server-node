@@ -14,6 +14,7 @@ import TuitService from "../services/TuitService";
  *     <li>GET /api/tuits to retrieve all the tuit instances </li>
  *     <li>GET /api/tuits/:tid to retrieve a particular tuit instances </li>
  *     <li>GET /api/users/:uid/tuits to retrieve tuits for a given user </li>
+ *     <li>GET /api/admin/:tuit/tuits to retrieve all tuit(s) with the searched string </li>
  *     <li>POST /api/tuits to create a new tuit instance </li>
  *     <li>POST /api/users/:uid/tuits to create a new tuit instance for
  *     a given user</li>
