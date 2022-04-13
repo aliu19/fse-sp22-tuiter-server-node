@@ -48,7 +48,6 @@ export default class UserController implements UserControllerI {
             app.post('/api/login', UserController.userController.login);
             app.post('/api/register', UserController.userController.register)
             app.put('/api/users/:uid', UserController.userController.updateUser);
-            app.delete('/api/users/:uid', UserController.userController.deleteUser);
             app.delete('/api/admin/:uid', UserController.userController.adminDeleteUser);
             app.get('/api/users/username/:username/delete', UserController.userController.deleteUserByUsername);
         }
@@ -128,30 +127,6 @@ export default class UserController implements UserControllerI {
         } else {
             UserController.userDao.createUser(newUser)
                 .then((user: User) => res.json(user));
-        }
-    }
-
-    /**
-     * Removes a user instance from the database
-     * @param {Request} req Represents request from client, including path
-     * parameter uid identifying the primary key of the user to be removed
-     * @param {Response} res Represents response to client, including status
-     * on whether deleting a user was successful or not
-     */
-    deleteUser = (req: Request, res: Response) => {
-        // @ts-ignore
-        const profile = req.session['profile'];
-        if (profile) {
-            if (profile._id === req.params.uid) {
-                UserController.userDao.deleteUser(req.params.uid)
-                    .then(status => {
-                        // @ts-ignore
-                        req.session.destroy();
-                        res.json(status)
-                    })
-            }
-        } else {
-            res.sendStatus(403);
         }
     }
 
