@@ -10,7 +10,8 @@ import User from '../users/User'
  * @property {User} postedBy The user who posted the tuit.
  */
 export default class Tuit {
-    private tuit: string = '';
-    private postedOn: Date = new Date();
-    private postedBy: User | null = null;
+    tuit: string = '';
+    postedOn: Date = new Date();
+    postedBy: User | null = null;
+    stats: {} = {}
 }
