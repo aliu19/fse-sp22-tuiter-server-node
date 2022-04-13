@@ -142,7 +142,7 @@ export default class UserController implements UserControllerI {
         // @ts-ignore
         const profile = req.session['profile'];
         if (profile) {
-            if (profile._id == req.params.uid) {
+            if (profile._id === req.params.uid) {
                 UserController.userDao.deleteUser(req.params.uid)
                     .then(status => {
                         // @ts-ignore
