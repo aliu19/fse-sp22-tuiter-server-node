@@ -197,8 +197,6 @@ export default class UserController implements UserControllerI {
             // update session
             const updatedUser = await UserController.userDao.findUserById(req.params.uid)
             updatedUser.password = '*****';
-            // @ts-ignore
-            req.session['profile'] = updatedUser;
         } else {
             // username is taken so error
             res.sendStatus(403);
