@@ -42,7 +42,7 @@ export default class UserController implements UserControllerI {
             UserController.userController = new UserController();
             app.get('/api/users', UserController.userController.findAllUsers);
             app.get('/api/users/:uid', UserController.userController.findUserById);
-            app.get('/api/admin/:username', UserController.userController.findUserByUsername)
+            app.get('/api/admin/:username', UserController.userController.searchByUsername)
             app.post('/api/users', UserController.userController.createUser);
             app.post('/api/admin', UserController.userController.adminCreateUser);
             app.post('/api/login', UserController.userController.login);
@@ -79,15 +79,18 @@ export default class UserController implements UserControllerI {
             .then((user: User) => res.json(user));
 
     /**
-     * Retrieves the user by their username
+     * Retrieves user(s) by their username
      * @param {Request} req Represents request from client, including path
-     * parameter username identifying the primary key of the user to be retrieved
+     * parameter username identifying the username of the user(s) to be retrieved
      * @param {Response} res Represents response to client, including the
-     * body formatted as JSON containing the user that matches the username
+     * body formatted as JSON containing the user(s) that match the username
      */
-    findUserByUsername = (req: Request, res: Response) =>
-        UserController.userDao.findUserByUsername(req.params.username)
-            .then((user: User) => res.json(user))
+    searchByUsername = (req: Request, res: Response) =>
+        UserController.userDao.searchByUsername(req.params.username)
+            .then(users => {
+                const sortedUsers = users.sort((a: User, b: User) => a.username > b.username ? 1 : -1)
+                res.json(sortedUsers)
+            })
 
     /**
      * Creates a new user instance
