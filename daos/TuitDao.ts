@@ -114,5 +114,5 @@ export default class TuitDao implements TuitDaoI {
      * Promise to be notified when tuit(s) are retrieved from the database
      */
     searchByTuit = async (tuit: string): Promise<any> =>
-        TuitModel.find({tuit: {$regex: tuit}})
+        TuitModel.find({tuit: {$regex: tuit}}).populate('postedBy').exec();
 }
