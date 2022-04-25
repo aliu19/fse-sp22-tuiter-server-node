@@ -5,6 +5,7 @@ import {Express, Request, Response} from "express";
 import BookmarkControllerI from "../interfaces/BookmarkControllerI";
 import BookmarkDao from "../daos/BookmarkDao";
 import Bookmark from "../models/bookmarks/Bookmark";
+import TuitDao from "../daos/TuitDao";
 
 /**
  * @class BookmarkController Implements RESTful Web service API for bookmarks resource
@@ -24,6 +25,7 @@ import Bookmark from "../models/bookmarks/Bookmark";
 export default class BookmarkController implements BookmarkControllerI {
     private static bookmarkDao: BookmarkDao = BookmarkDao.getInstance();
     private static bookmarkController: BookmarkController | null = null;
+    private static tuitDao: TuitDao = TuitDao.getInstance();
 
     /**
      * Creates singleton controller instance
@@ -36,8 +38,7 @@ export default class BookmarkController implements BookmarkControllerI {
             app.get('/api/users/:uid/bookmarks', BookmarkController.bookmarkController.findAllTuitsBookmarkedByUser);
             app.get('/api/tuits/:tid/bookmarks', BookmarkController.bookmarkController.findAllUsersThatBookmarkedTuit);
             app.get('/api/bookmarks', BookmarkController.bookmarkController.findAllBookmark);
-            app.post('/api/users/:uid/bookmarks/:tid', BookmarkController.bookmarkController.userBookmarksTuit);
-            app.delete('/api/users/:uid/unbookmarks/:tid', BookmarkController.bookmarkController.userUnbookmarksTuit);
+            app.put('/api/users/:uid/bookmarks/:tid', BookmarkController.bookmarkController.userTogglesTuitBookmarks);
         }
         return BookmarkController.bookmarkController;
     }
@@ -65,29 +66,40 @@ export default class BookmarkController implements BookmarkControllerI {
             .then((bookmarks: Bookmark[]) => res.json(bookmarks));
 
     /**
-     * Creates a new bookmark instance to record that a user bookmarks a tuit
+     * Creates a new bookmark instance to record that a user bookmarks a tuit or
+     * removes a bookmark instane to record that user no longer bookmarks the tuit
      * @param {Request} req Represents request from client, including path
-     * parameter uid and tid representing the user that is bookmarking the tuit
-     * and the tuit being bookmarked
-     * @param {Response} res Represents response from client, including the
-     * body formatted as JSON containing the new bookmark that was inserted in
-     * the database
+     * parameter uid and tid representing the user that is un/bookmarking the tuit
+     * and the tuit being un/bookmarked
+     * @param {Response} res Represents response from client, including status
+     * on whether tuit is successfully bookmarked or bookmark is removed if tuit
+     * is already bookmarked before.
      */
-    userBookmarksTuit = (req: Request, res: Response) =>
-        BookmarkController.bookmarkDao.userBookmarksTuit(req.params.uid, req.params.tid)
-            .then((bookmark: Bookmark) => res.json(bookmark));
+    userTogglesTuitBookmarks = async (req: Request, res: Response) => {
+        const bookmarkDao = BookmarkController.bookmarkDao;
+        const tuitDao = BookmarkController.tuitDao;
 
-    /**
-     * Removes a bookmark instance to record that user no longer bookmarks the tuit
-     * @param {Request} req Represents request from client, including the path
-     * parameter uid and tid representing the user is unbookmarking the tuit and
-     * the tuit being unbookmarked
-     * @param {Response} res Represents response to client, including status
-     * on whether deleting the bookmark was successful or not
-     */
-    userUnbookmarksTuit = (req: Request, res: Response) =>
-        BookmarkController.bookmarkDao.userUnbookmarksTuit(req.params.uid, req.params.tid)
-            .then(status => res.send(status));
+        const uid = req.params.uid;
+        const tid = req.params.tid;
+
+        // @ts-ignore
+        const profile = req.session['profile'];
+        const userId = uid === 'me' && profile ? profile._id : uid;
+
+        try {
+            const userAlreadyBookmarkedTuit = await bookmarkDao.findUserBookmarksTuit(userId, tid);
+
+            if (userAlreadyBookmarkedTuit) {
+                await bookmarkDao.userUnbookmarksTuit(userId, tid);
+            } else {
+                await bookmarkDao.userBookmarksTuit(userId,tid);
+            }
+
+            res.sendStatus(200);
+        } catch (e) {
+            res.sendStatus(404);
+        }
+    }
 
     /**
      * Retrieves all bookmarks from the database and returns an array of bookmarks (including
