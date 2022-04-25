@@ -14,4 +14,5 @@ export default interface TuitDaoI {
     deleteTuitByContent(content: string): Promise<any>;
     updateLikes(tid: string, newStats: any): Promise<any>;
     searchByTuit(tuit: string): Promise<any>;
+    deleteAllTuitsByUser(uid: string): Promise<any>;
 }
