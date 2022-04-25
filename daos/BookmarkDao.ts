@@ -81,6 +81,12 @@ export default class BookmarkDao implements BookmarkDaoI {
             .populate('tuit')
             .exec();
 
+  /**
+   * Use BookmarkModel to determine if a user bookmarked a tuit.
+   * @param {string} uid user's primary key
+   * @param {string} tid Tuit's primary key
+   * @returns Promise To be notified when bookmark is found from the database
+   */
     findUserBookmarksTuit = async (uid: string, tid: string): Promise<any> =>
         BookmarkModel.findOne({tuit: tid, bookmarkedBy: uid});
 }
