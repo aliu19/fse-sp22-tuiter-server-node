@@ -6,6 +6,8 @@ import BookmarkControllerI from "../interfaces/BookmarkControllerI";
 import BookmarkDao from "../daos/BookmarkDao";
 import Bookmark from "../models/bookmarks/Bookmark";
 import TuitDao from "../daos/TuitDao";
+import Dislike from "../models/dislikes/Dislike";
+import TuitService from "../services/TuitService";
 
 /**
  * @class BookmarkController Implements RESTful Web service API for bookmarks resource
@@ -24,7 +26,7 @@ import TuitDao from "../daos/TuitDao";
 export default class BookmarkController implements BookmarkControllerI {
     private static bookmarkDao: BookmarkDao = BookmarkDao.getInstance();
     private static bookmarkController: BookmarkController | null = null;
-    private static tuitDao: TuitDao = TuitDao.getInstance();
+    private static tuitService: TuitService = TuitService.getInstance();
 
     /**
      * Creates singleton controller instance
@@ -49,9 +51,28 @@ export default class BookmarkController implements BookmarkControllerI {
      * @param {Response} res Represents response to client, including the
      * body formatted as JSON arrays containing the tuit objects that were bookmarked
      */
-    findAllTuitsBookmarkedByUser = (req: Request, res: Response) =>
-        BookmarkController.bookmarkDao.findAllTuitsBookmarkedByUser(req.params.uid)
-            .then((bookmarks: Bookmark[]) => res.json(bookmarks));
+    findAllTuitsBookmarkedByUser = (req: Request, res: Response) => {
+        const uid = req.params.uid;
+        // @ts-ignore
+        const profile = req.session['profile'];
+        const userId = uid === 'me' && profile ?
+            profile._id : uid;
+        if (userId === 'me') {
+            res.sendStatus(403);
+        } else {
+            try {
+                BookmarkController.bookmarkDao.findAllTuitsBookmarkedByUser(userId)
+                .then( async (bookmarks: Bookmark[]) => {
+                    const bookmarksNonNullTuits = bookmarks.filter(bookmark => bookmark.tuit);
+                    const tuitsFromBookmarks = bookmarksNonNullTuits.map(bookmark => bookmark.tuit);
+                    const fetchTuits = await BookmarkController.tuitService.fetchTuitsForLikesDisLikeOwn(userId, tuitsFromBookmarks);
+                    res.json(fetchTuits);
+                });
+            } catch (e) {
+                res.sendStatus(403);
+            }
+        }
+    }
 
     /**
      * Retrieves all users that bookmarked a tuit from the database
