@@ -80,4 +80,7 @@ export default class BookmarkDao implements BookmarkDaoI {
             .populate('bookmarkedBy', {username: 1})
             .populate('tuit')
             .exec();
+
+    findUserBookmarksTuit = async (uid: string, tid: string): Promise<any> =>
+        BookmarkModel.findOne({tuit: tid, bookmarkedBy: uid});
 }
