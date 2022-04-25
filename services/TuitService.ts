@@ -4,6 +4,7 @@
 import LikeDao from "../daos/LikeDao";
 import DislikeDao from "../daos/DislikeDao";
 import Tuit from "../models/tuits/Tuit";
+import BookmarkDao from "../daos/BookmarkDao";
 
 /**
  * @class TuitService Implements Tuit service that provides some helper functions
@@ -14,6 +15,7 @@ export default class TuitService {
     public static tuitService: TuitService | null = null;
     private static likeDao: LikeDao = LikeDao.getInstance();
     private static dislikeDao: DislikeDao = DislikeDao.getInstance();
+    private static bookmarkDao: BookmarkDao = BookmarkDao.getInstance();
     /**
      * Creates singleton Service instance
      * @returns TuitService
@@ -38,21 +40,31 @@ export default class TuitService {
     public fetchTuitsForLikesDisLikeOwn = async (userId: any, tuits: Tuit[]): Promise<any[]> => {
         let findLikesPromises: any[] = []
         let findDislikesPromises: any[] = []
+        let findBookmarksPromises: any[] = []
 
         tuits.forEach((t: any) => {
             let findLikePromise = TuitService.likeDao.findUserLikesTuit(userId, t._id);
             let findDislikePromise = TuitService.dislikeDao.findUserDislikesTuit(userId, t._id);
+            let findBookmarkPromise = TuitService.bookmarkDao.findUserBookmarksTuit(userId, t._id);
             findLikesPromises.push(findLikePromise);
             findDislikesPromises.push(findDislikePromise);
+            findBookmarksPromises.push(findBookmarkPromise);
         })
         const likedTuits = await Promise.all(findLikesPromises);
         const dislikedTuits = await Promise.all(findDislikesPromises);
+        const bookmarkedTuits = await Promise.all(findBookmarksPromises);
         const likedTuitsIds = likedTuits.map((l) => {
             if (l) {
                 return l.tuit.toString();
             }
         })
         const dislikedTuitsIds = dislikedTuits.map((l) => {
+            if (l) {
+                return l.tuit.toString();
+            }
+        })
+
+        const bookmarkedTuitsIds = bookmarkedTuits.map((l) => {
             if (l) {
                 return l.tuit.toString();
             }
@@ -65,6 +77,9 @@ export default class TuitService {
             }
             if (dislikedTuitsIds.indexOf(t._id.toString()) >= 0) {
                 copyT = {...copyT, dislikedByMe: true};
+            }
+            if (bookmarkedTuitsIds.indexOf(t._id.toString()) >= 0) {
+                copyT = {...copyT, bookmarkedByMe: true}
             }
             if (copyT.postedBy._id.toString() === userId.toString()) {
                 copyT = {...copyT, ownedByMe: true};
