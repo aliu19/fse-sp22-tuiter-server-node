@@ -80,4 +80,12 @@ export default class DislikeDao implements DislikeDaoI {
      */
     userUnDislikesTuit = async (uid: string, tid: string): Promise<any> =>
         DislikeModel.deleteOne({tuit: tid, dislikedBy: uid});
+
+    /**
+     * Removes all dislikes by a user from the database
+     * @param {string} uid user's primary key
+     * @returns Promise To be notified when dislike(s) are removed from the database
+     */
+    deleteAllDislikesByUser= async (uid: string): Promise<any> =>
+        DislikeModel.deleteMany({dislikedBy: uid})
 }
