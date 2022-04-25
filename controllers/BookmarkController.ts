@@ -14,8 +14,7 @@ import TuitDao from "../daos/TuitDao";
  *     <li>GET /api/user/:uid/bookmarks to retrieve all tuits bookmarked by a user </li>
  *     <li>GET /api/user/:tid/bookmarks to retrieve all users that bookmarked a tuit </li>
  *     <li>GET /api/bookmarks to retrieve all the bookmark documents for testing purpose </li>
- *     <li>POST /api/users/:uid/bookmarks/:tid to record that a user bookmarks a tuit </li>
- *     <li>DELETE /api/users/:uid/unbookmarks/:tid to record that a user no longer
+ *     <li>PUT /api/users/:uid/bookmarks/:tid to record that a user un/bookmarks a tuit </li>
  *     bookmarks a tuit </li>
  * </ul>
  * @property {BookmarkDao} bookmarkDao Singleton DAO implementing like CRUD operations
@@ -77,7 +76,6 @@ export default class BookmarkController implements BookmarkControllerI {
      */
     userTogglesTuitBookmarks = async (req: Request, res: Response) => {
         const bookmarkDao = BookmarkController.bookmarkDao;
-        const tuitDao = BookmarkController.tuitDao;
 
         const uid = req.params.uid;
         const tid = req.params.tid;
