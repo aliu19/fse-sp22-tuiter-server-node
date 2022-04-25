@@ -62,12 +62,12 @@ export default class BookmarkController implements BookmarkControllerI {
         } else {
             try {
                 BookmarkController.bookmarkDao.findAllTuitsBookmarkedByUser(userId)
-                .then( async (bookmarks: Bookmark[]) => {
-                    const bookmarksNonNullTuits = bookmarks.filter(bookmark => bookmark.tuit);
-                    const tuitsFromBookmarks = bookmarksNonNullTuits.map(bookmark => bookmark.tuit);
-                    const fetchTuits = await BookmarkController.tuitService.fetchTuitsForLikesDisLikeOwn(userId, tuitsFromBookmarks);
-                    res.json(fetchTuits);
-                });
+                    .then( async (bookmarks: Bookmark[]) => {
+                        const bookmarksNonNullTuits = bookmarks.filter(bookmark => bookmark.tuit);
+                        const tuitsFromBookmarks = bookmarksNonNullTuits.map(bookmark => bookmark.tuit);
+                        const fetchTuits = await BookmarkController.tuitService.fetchTuitsForLikesDisLikeOwn(userId, tuitsFromBookmarks);
+                        res.json(fetchTuits);
+                    });
             } catch (e) {
                 res.sendStatus(403);
             }
