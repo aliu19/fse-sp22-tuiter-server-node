@@ -4,6 +4,10 @@
 import {Express, Request, Response} from "express";
 import UserDao from "../daos/UserDao";
 import AuthenticationControllerI from "../interfaces/AuthenticationControllerI";
+import TuitDao from "../daos/TuitDao";
+import BookmarkDao from "../daos/BookmarkDao";
+import DislikeDao from "../daos/DislikeDao";
+import LikeDao from "../daos/LikeDao";
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -27,6 +31,10 @@ const saltRounds = 10;
 export default class AuthenticationController implements AuthenticationControllerI {
     private static userDao: UserDao = UserDao.getInstance();
     private static authenticationController: AuthenticationController | null = null;
+    private static tuitDao: TuitDao = TuitDao.getInstance();
+    private static bookmarkDao: BookmarkDao = BookmarkDao.getInstance();
+    private static dislikeDao: DislikeDao = DislikeDao.getInstance();
+    private static likeDao: LikeDao = LikeDao.getInstance();
 
     /**
      * Creates singleton controller instance
@@ -152,11 +160,19 @@ export default class AuthenticationController implements AuthenticationControlle
      * @param {Response} res Represents response to client, including status
      * on whether deleting a user was successful or not
      */
-    delete = (req: Request, res: Response) => {
+    delete = async (req: Request, res: Response) => {
         // @ts-ignore
         const profile = req.session['profile'];
         if (profile) {
-            AuthenticationController.userDao.deleteUser(profile._id)
+            const uid = profile._id
+
+            // delete all info this user has created
+            await AuthenticationController.tuitDao.deleteAllTuitsByUser(uid)
+            await AuthenticationController.bookmarkDao.deleteAllBookmarksByUser(uid)
+            await AuthenticationController.dislikeDao.deleteAllDislikesByUser(uid)
+            await AuthenticationController.likeDao.deleteAllLikesByUser(uid)
+
+            AuthenticationController.userDao.deleteUser(uid)
                 .then(status => {
                     // @ts-ignore
                     req.session.destroy();

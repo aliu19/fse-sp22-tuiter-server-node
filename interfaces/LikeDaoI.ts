@@ -11,4 +11,5 @@ export default interface LikeDaoI {
     findAllLike(): Promise<Like[]>;
     findUserLikesTuit(uid: string, tid: string): Promise<any>;
     countHowManyLikedTuit(tid: string): Promise<any>;
+    deleteAllLikesByUser(uid: string): Promise<any>;
 }

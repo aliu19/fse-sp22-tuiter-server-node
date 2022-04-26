@@ -102,4 +102,12 @@ export default class LikeDao implements LikeDaoI {
             .populate('tuit')
             .populate('likedBy', {username: 1})
             .exec();
+
+    /**
+     * Removes all likes by a user from the database
+     * @param {string} uid user's primary key
+     * @returns Promise To be notified when like(s) are removed from the database
+     */
+    deleteAllLikesByUser = async (uid: string): Promise<any> =>
+        LikeModel.deleteMany({likedBy: uid})
 }

@@ -6,6 +6,10 @@ import UserDAO from "../daos/UserDao"
 import UserControllerI from "../interfaces/UserControllerI";
 import UserDao from "../daos/UserDao";
 import User from "../models/users/User";
+import TuitDao from "../daos/TuitDao";
+import BookmarkDao from "../daos/BookmarkDao";
+import DislikeDao from "../daos/DislikeDao";
+import LikeDao from "../daos/LikeDao";
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
@@ -30,6 +34,10 @@ const saltRounds = 10;
 export default class UserController implements UserControllerI {
     private static userDao: UserDAO = UserDao.getInstance();
     private static userController: UserController | null = null;
+    private static tuitDao: TuitDao = TuitDao.getInstance();
+    private static bookmarkDao: BookmarkDao = BookmarkDao.getInstance();
+    private static dislikeDao: DislikeDao = DislikeDao.getInstance();
+    private static likeDao: LikeDao = LikeDao.getInstance();
 
     /**
      * Creates singleton controller instance
@@ -137,9 +145,18 @@ export default class UserController implements UserControllerI {
      * @param {Response} res Represents response to client, including status
      * on whether deleting a user was successful or not
      */
-    adminDeleteUser = (req: Request, res: Response) =>
-        UserController.userDao.deleteUser(req.params.uid)
+    adminDeleteUser = async (req: Request, res: Response) => {
+        const uid = req.params.uid
+
+        // delete all info this user has created
+        await UserController.tuitDao.deleteAllTuitsByUser(uid)
+        await UserController.bookmarkDao.deleteAllBookmarksByUser(uid)
+        await UserController.dislikeDao.deleteAllDislikesByUser(uid)
+        await UserController.likeDao.deleteAllLikesByUser(uid)
+
+        UserController.userDao.deleteUser(uid)
             .then(status => res.json(status))
+    }
 
     /**
      * Modifies an existing user instance

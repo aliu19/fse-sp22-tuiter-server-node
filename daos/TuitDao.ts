@@ -115,4 +115,12 @@ export default class TuitDao implements TuitDaoI {
      */
     searchByTuit = async (tuit: string): Promise<any> =>
         TuitModel.find({tuit: {$regex: tuit}}).populate('postedBy').exec();
+
+    /**
+     * Removes all tuits by a user from the database
+     * @param {string} uid user's primary key
+     * @returns Promise To be notified when tuit(s) are removed from the database
+     */
+    deleteAllTuitsByUser = async (uid: string): Promise<any> =>
+        TuitModel.deleteMany({postedBy: uid})
 }
