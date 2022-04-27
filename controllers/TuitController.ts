@@ -124,15 +124,34 @@ export default class TuitController implements TuitControllerI {
             // @ts-ignore
             req.session['profile']._id : req.params.uid;
 
+        // @ts-ignore
+        let myId = req.params.uid !== 'me' && req.session['profile'] ?
+            // @ts-ignore
+            req.session['profile']._id : null;
+
         if (userId === 'me') {
             res.sendStatus(403);
         } else {
-            TuitController.tuitDao.findTuitsByUser(userId)
-                .then( async (tuits: Tuit[]) => {
-                    const fetchTuits = await TuitController.tuitService
-                        .fetchTuitsForLikesDisLikeOwn(userId, tuits);
-                    res.json(fetchTuits);
-                })
+            if (req.params.uid === 'me') {
+                TuitController.tuitDao.findTuitsByUser(userId)
+                    .then( async (tuits: Tuit[]) => {
+                        const fetchTuits = await TuitController.tuitService
+                            .fetchTuitsForLikesDisLikeOwn(userId, tuits);
+                        res.json(fetchTuits);
+                    })
+            } else {
+                if (myId === null) {
+                    TuitController.tuitDao.findTuitsByUser(userId)
+                        .then(tuits => res.json(tuits))
+                } else {
+                    TuitController.tuitDao.findTuitsByUser(userId)
+                        .then( async (tuits: Tuit[]) => {
+                            const fetchTuits = await TuitController.tuitService
+                                .fetchTuitsForLikesDisLikeOwn(myId, tuits);
+                            res.json(fetchTuits);
+                        })
+                }
+            }
         }
     }
 
