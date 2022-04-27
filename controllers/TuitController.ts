@@ -140,7 +140,6 @@ export default class TuitController implements TuitControllerI {
                         res.json(fetchTuits);
                     })
             } else {
-                console.log('myId', myId)
                 if (myId === null) {
                     TuitController.tuitDao.findTuitsByUser(userId)
                         .then(tuits => res.json(tuits))
